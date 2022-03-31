@@ -51,7 +51,49 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "nrf_delay.h"
-#include "boards.h"
+#include "nrf_gpio.h"
+
+#define LEDS 1
+static uint32_t leds[] = { 15 };
+
+void config_leds() {
+    // p0.15 BLED
+    for (int i = 0; i < LEDS; i++) nrf_gpio_cfg_output(leds[i]);
+}
+
+#define ROWS 3
+static uint32_t rows[] = { NRF_GPIO_PIN_MAP(0,2), NRF_GPIO_PIN_MAP(0,29), NRF_GPIO_PIN_MAP(0,31) };
+
+void config_rows() {
+    // output
+    for (int i = 0; i < ROWS; i++) nrf_gpio_cfg_output(rows[i]);
+}
+
+#define COLUMS 8
+static uint32_t columns[] = { NRF_GPIO_PIN_MAP(1,15), NRF_GPIO_PIN_MAP(1,13), NRF_GPIO_PIN_MAP(1,11), NRF_GPIO_PIN_MAP(0,10), NRF_GPIO_PIN_MAP(0,9), NRF_GPIO_PIN_MAP(1, 6), NRF_GPIO_PIN_MAP(1,4), NRF_GPIO_PIN_MAP(0,11)};
+
+void config_cols() {
+    // input
+    for (int i = 0; i < COLUMS; i++) nrf_gpio_cfg_input(columns[i], NRF_GPIO_PIN_PULLDOWN);   
+}
+
+uint8_t get_button_states() {
+    uint8_t out = 0;
+    for (int i = 0; i < COLUMS; i++) {
+        if (nrf_gpio_pin_read(columns[i])) out |= (1 << i);
+        
+    }
+    return out;
+}
+
+void config_input() {
+    config_rows();
+    config_cols();
+}
+
+void toggle_led() {
+    nrf_gpio_pin_toggle(leds[0]);
+}
 
 /**
  * @brief Function for application main entry.
@@ -59,16 +101,19 @@
 int main(void)
 {
     /* Configure board. */
-    bsp_board_init(BSP_INIT_LEDS);
+    config_leds();
+    config_input();
+    nrf_gpio_pin_set(rows[0]);
 
     /* Toggle LEDs. */
-    while (true)
-    {
-        for (int i = 0; i < LEDS_NUMBER; i++)
-        {
-            bsp_board_led_invert(i);
-            nrf_delay_ms(500);
+    while (true) {
+        if (get_button_states()) {
+            nrf_gpio_pin_set(leds[0]);
+        } else {
+            nrf_gpio_pin_clear(leds[0]);
         }
+        nrf_delay_ms(500);
+        
     }
 }
 
