@@ -103,7 +103,10 @@ int main(void)
     /* Configure board. */
     config_leds();
     config_input();
+
     nrf_gpio_pin_set(rows[0]);
+    nrf_gpio_pin_set(rows[1]);
+    nrf_gpio_pin_set(rows[2]);
 
     /* Toggle LEDs. */
     while (true) {
@@ -112,7 +115,7 @@ int main(void)
         } else {
             nrf_gpio_pin_clear(leds[0]);
         }
-        nrf_delay_ms(500);
+        nrf_delay_ms(50);
         
     }
 }
