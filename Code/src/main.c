@@ -52,6 +52,43 @@
 #include <stdint.h>
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
+#include "common.h"
+#include "buttons.h"
+
+
+#include "nrf.h"
+#include "nrf_drv_timer.h"
+#include "bsp.h"
+#include "app_error.h"
+
+const nrf_drv_timer_t TIMER_COUNTER = NRF_DRV_TIMER_INSTANCE(0);
+
+
+static volatile unsigned long ms_counter = 0;
+
+void timer_counter_event_handler(nrf_timer_event_t event_type, void* p_context) {
+    switch (event_type) {
+        case NRF_TIMER_EVENT_COMPARE0:
+            ms_counter++;
+            break;
+        default:
+            break;
+
+    }
+}
+
+void config_timers() {
+    nrf_drv_timer_config_t timer_cfg = NRFX_TIMER_DEFAULT_CONFIG;
+    nrf_drv_timer_init(&TIMER_COUNTER, &timer_cfg, timer_counter_event_handler);
+    uint32_t time_ticks = nrf_drv_timer_ms_to_ticks(&TIMER_COUNTER, 1); // (1ms)
+
+    nrf_drv_timer_extended_compare(&TIMER_COUNTER, NRF_TIMER_CC_CHANNEL0, time_ticks, NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK, true);
+    nrf_drv_timer_enable(&TIMER_COUNTER);
+}
+
+unsigned long millis(void) {
+    return ms_counter;
+}
 
 #define LEDS 1
 static uint32_t leds[] = { 15 };
@@ -59,36 +96,6 @@ static uint32_t leds[] = { 15 };
 void config_leds() {
     // p0.15 BLED
     for (int i = 0; i < LEDS; i++) nrf_gpio_cfg_output(leds[i]);
-}
-
-#define ROWS 3
-static uint32_t rows[] = { NRF_GPIO_PIN_MAP(0,2), NRF_GPIO_PIN_MAP(0,29), NRF_GPIO_PIN_MAP(0,31) };
-
-void config_rows() {
-    // output
-    for (int i = 0; i < ROWS; i++) nrf_gpio_cfg_output(rows[i]);
-}
-
-#define COLUMS 8
-static uint32_t columns[] = { NRF_GPIO_PIN_MAP(1,15), NRF_GPIO_PIN_MAP(1,13), NRF_GPIO_PIN_MAP(1,11), NRF_GPIO_PIN_MAP(0,10), NRF_GPIO_PIN_MAP(0,9), NRF_GPIO_PIN_MAP(1, 6), NRF_GPIO_PIN_MAP(1,4), NRF_GPIO_PIN_MAP(0,11)};
-
-void config_cols() {
-    // input
-    for (int i = 0; i < COLUMS; i++) nrf_gpio_cfg_input(columns[i], NRF_GPIO_PIN_PULLDOWN);   
-}
-
-uint8_t get_button_states() {
-    uint8_t out = 0;
-    for (int i = 0; i < COLUMS; i++) {
-        if (nrf_gpio_pin_read(columns[i])) out |= (1 << i);
-        
-    }
-    return out;
-}
-
-void config_input() {
-    config_rows();
-    config_cols();
 }
 
 void toggle_led() {
@@ -102,12 +109,11 @@ int main(void)
 {
     /* Configure board. */
     config_leds();
-    config_input();
+    config_buttons();
+    config_timers();
 
-    nrf_gpio_pin_set(rows[0]);
-    nrf_gpio_pin_set(rows[1]);
-    nrf_gpio_pin_set(rows[2]);
-
+    enable_all_rows();
+    
     /* Toggle LEDs. */
     while (true) {
         if (get_button_states()) {
