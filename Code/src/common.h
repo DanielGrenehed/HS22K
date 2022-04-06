@@ -23,6 +23,7 @@
 #define P011 NRF_GPIO_PIN_MAP(0,11)
 
 #define P102 NRF_GPIO_PIN_MAP(1,2)
+#define P015 NRF_GPIO_PIN_MAP(0,15)
 
 #define P101 NRF_GPIO_PIN_MAP(1,1)
 #define P107 NRF_GPIO_PIN_MAP(1,7)
@@ -39,6 +40,8 @@
 #define UART_RX P008
 
 #define PIM447_INT_PIN P102
+
+#define LED_PIN P015
 
 #define SPI_CS_RIGHT P101
 #define SPI_CS_LEFT P107

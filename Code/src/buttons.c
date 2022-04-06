@@ -1,30 +1,14 @@
 #include "buttons.h"
 #include "common.h"
 #include "nrf_gpio.h"
+#include "util.h"
 
 
 
 static uint32_t rows[] = { P002, P029, P031 };
 static uint32_t columns[] = { P115, P113, P111, P010, P009, P106, P104, P011 };
 
-/*
-    Button Debounce and state macine
 
-    Enable row 0
-        get button states
-    disable row 0
-
-    enable row 1 
-        get button states
-    disable row 1
-
-    enable row 2
-        get button states
-    disable row 2
-
-    repeat
-    
-*/
 
 typedef struct {
     unsigned long debounce;
@@ -33,6 +17,8 @@ typedef struct {
 
 #define BUTTON_DEBOUNCED 1
 #define BUTTON_PRESSED 0
+
+#define DEBOUNCE_TIME_MS 6
 
 Button button_matrix[BUTTON_COUNT];
 
@@ -83,12 +69,16 @@ void poll_buttons() {
     */
     for (int i = 0; i < COL_COUNT; i++) {
         Button * button = &button_matrix[current_row * COL_COUNT + i];
-        uint8_t pcs = nrf_gpio_pin_read(columns[i]);
-        if (button->debounce) {
-            // if debounce exceeded debounce time
-            // else do nothing
-        } else if ((button->state & (1 << BUTTON_PRESSED)) != pcs) {
+        uint8_t button_state = nrf_gpio_pin_read(columns[i]);
+        if (button->debounce && (millis() - button->debounce) > DEBOUNCE_TIME_MS) {
+            // if state changed set debounced
+            if ((button->state & (1 << BUTTON_PRESSED)) != button_state) {
+                button->state = button_state | (1 << BUTTON_DEBOUNCED);
+            }
 
+        } else if ((button->state & (1 << BUTTON_PRESSED)) != button_state) {
+            // if state chaned: start debounce
+            button->debounce = millis();
         }
     }
 }
@@ -104,6 +94,7 @@ void handle_buttons() {
         break;
         case read_input:
             poll_buttons();
+            
             current_row++;
             if (current_row == ROW_COUNT) {
                 set_row(current_row); // clear rows

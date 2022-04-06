@@ -47,19 +47,19 @@
  * This file contains the source code for a sample application to blink LEDs.
  *
  */
-
 #include <stdbool.h>
 #include <stdint.h>
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 #include "common.h"
 #include "buttons.h"
+#include "util.h"
 
-
+/*
 #include "nrf.h"
 #include "nrf_drv_timer.h"
-#include "bsp.h"
-#include "app_error.h"
+//#include "bsp.h"
+//#include "app_error.h"
 
 const nrf_drv_timer_t TIMER_COUNTER = NRF_DRV_TIMER_INSTANCE(0);
 
@@ -78,7 +78,13 @@ void timer_counter_event_handler(nrf_timer_event_t event_type, void* p_context) 
 }
 
 void config_timers() {
-    nrf_drv_timer_config_t timer_cfg = NRFX_TIMER_DEFAULT_CONFIG;
+    nrf_drv_timer_config_t timer_cfg = (nrf_drv_timer_config_t) { 
+        .frequency = NRF_TIMER_FREQ_125kHz,
+        .mode = NRF_TIMER_MODE_TIMER,
+        .bit_width = NRF_TIMER_BIT_WIDTH_16,
+        .interrupt_priority = 7,
+        .p_context = NULL
+    };
     nrf_drv_timer_init(&TIMER_COUNTER, &timer_cfg, timer_counter_event_handler);
     uint32_t time_ticks = nrf_drv_timer_ms_to_ticks(&TIMER_COUNTER, 1); // (1ms)
 
@@ -89,9 +95,9 @@ void config_timers() {
 unsigned long millis(void) {
     return ms_counter;
 }
-
+*/
 #define LEDS 1
-static uint32_t leds[] = { 15 };
+static uint32_t leds[] = { LED_PIN };
 
 void config_leds() {
     // p0.15 BLED
@@ -116,12 +122,11 @@ int main(void)
     
     /* Toggle LEDs. */
     while (true) {
-        if (get_button_states()) {
-            nrf_gpio_pin_set(leds[0]);
-        } else {
-            nrf_gpio_pin_clear(leds[0]);
-        }
-        nrf_delay_ms(50);
+        handle_buttons();
+        if (buttons_ready() && is_button_pressed(0, 1)) {
+            if (is_button_pressed(0, 1)) nrf_gpio_pin_set(leds[0]);
+            else nrf_gpio_pin_clear(leds[0]);
+        } 
         
     }
 }
