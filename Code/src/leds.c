@@ -1,6 +1,6 @@
 #include "leds.h"
 #include "nrf_gpio.h"
-#include "common.h"
+#include "hs22k_board.h"
 
 static const uint32_t led_pins[] = { LED_PIN };
 
