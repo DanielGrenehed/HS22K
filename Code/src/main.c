@@ -51,21 +51,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "nrf_delay.h"
-#include "nrf_gpio.h"
 #include "common.h"
 #include "key_input.h"
-
-static uint32_t leds[] = { LED_PIN };
-
-void config_leds() {
-    // p0.15 BLED
-    for (int i = 0; i < LED_COUNT; i++) nrf_gpio_cfg_output(leds[i]);
-}
+#include "leds.h"
 
 
-void toggle_led() {
-    nrf_gpio_pin_toggle(leds[0]);
-}
 
 /**
  * @brief Function for application main entry.
@@ -81,11 +71,10 @@ int main(void)
     /* Toggle LEDs. */
     while (true) {
         enable_all_rows();
-        if (get_button_states()) {
-            nrf_gpio_pin_set(leds[0]);
-        } else {
-            nrf_gpio_pin_clear(leds[0]);
-        }
+
+        if (get_button_states()) set_led(0);
+        else clear_led(0);
+        
         clear_all_rows();
         nrf_delay_ms(10);
         
