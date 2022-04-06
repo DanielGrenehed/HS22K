@@ -52,44 +52,16 @@
 #include <stdint.h>
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
+#include "common.h"
+#include "key_input.h"
 
-#define LEDS 1
-static uint32_t leds[] = { 15 };
+static uint32_t leds[] = { LED_PIN };
 
 void config_leds() {
     // p0.15 BLED
-    for (int i = 0; i < LEDS; i++) nrf_gpio_cfg_output(leds[i]);
+    for (int i = 0; i < LED_COUNT; i++) nrf_gpio_cfg_output(leds[i]);
 }
 
-#define ROWS 3
-static uint32_t rows[] = { NRF_GPIO_PIN_MAP(0,2), NRF_GPIO_PIN_MAP(0,29), NRF_GPIO_PIN_MAP(0,31) };
-
-void config_rows() {
-    // output
-    for (int i = 0; i < ROWS; i++) nrf_gpio_cfg_output(rows[i]);
-}
-
-#define COLUMS 8
-static uint32_t columns[] = { NRF_GPIO_PIN_MAP(1,15), NRF_GPIO_PIN_MAP(1,13), NRF_GPIO_PIN_MAP(1,11), NRF_GPIO_PIN_MAP(0,10), NRF_GPIO_PIN_MAP(0,9), NRF_GPIO_PIN_MAP(1, 6), NRF_GPIO_PIN_MAP(1,4), NRF_GPIO_PIN_MAP(0,11)};
-
-void config_cols() {
-    // input
-    for (int i = 0; i < COLUMS; i++) nrf_gpio_cfg_input(columns[i], NRF_GPIO_PIN_PULLDOWN);   
-}
-
-uint8_t get_button_states() {
-    uint8_t out = 0;
-    for (int i = 0; i < COLUMS; i++) {
-        if (nrf_gpio_pin_read(columns[i])) out |= (1 << i);
-        
-    }
-    return out;
-}
-
-void config_input() {
-    config_rows();
-    config_cols();
-}
 
 void toggle_led() {
     nrf_gpio_pin_toggle(leds[0]);
@@ -104,18 +76,18 @@ int main(void)
     config_leds();
     config_input();
 
-    nrf_gpio_pin_set(rows[0]);
-    nrf_gpio_pin_set(rows[1]);
-    nrf_gpio_pin_set(rows[2]);
+    
 
     /* Toggle LEDs. */
     while (true) {
+        enable_all_rows();
         if (get_button_states()) {
             nrf_gpio_pin_set(leds[0]);
         } else {
             nrf_gpio_pin_clear(leds[0]);
         }
-        nrf_delay_ms(50);
+        clear_all_rows();
+        nrf_delay_ms(10);
         
     }
 }
