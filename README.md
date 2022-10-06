@@ -1,6 +1,6 @@
 # HS22K
  22 Key half-split keyboard
-[<img src="./Resources/hs22k_fininshd.jpg">]()
+[![hs22k image](https://github.com/DanielGrenehed/HS22K/blob/main/Resources/hs22k_finished.jpg)]()
 
 ## Firmware
 I currently run ZMK on this board. My config and layout can be found [here](https://github.com/DanielGrenehed/zmk/tree/main/app/boards/arm/hs22k).
